@@ -1,5 +1,4 @@
 ---
-
 - name: add rainbow user
   user:
     name: rainbow
@@ -22,30 +21,73 @@
       - pkg-config
       - libssl-dev
 
-- name: Check current go version
-  command: cat /usr/local/go/VERSION
-  check_mode: no
+- name: Change various sysctl settings
+  lineinfile:
+    path: /etc/sysctl.d/99-custom.conf
+    line: "{{ item.key }}={{ item.value }}"
+    regexp: "^{{ item.key }}="
+    owner: root
+    group: root
+    create: true
+    state: present
+  with_dict: "{{ rainbow_sysctl_config }}"
+  notify:
+    - "reload sysctl"
+
+- name: check current go version
+  shell: "cat {{ rainbow_home }}/go/VERSION | head -n1"
   changed_when: no
   failed_when: no
   register: go_current_version
-      
+
+- name: Current go version
+  debug:
+    msg: "{{ go_current_version.stdout }}"
+
 - name: uninstall go for upgrade
   become: yes
+  no_log: yes
   file:
     state: absent
-    dest: /usr/local/go
-  when: go_current_version != 'go'+go_version
+    dest: "{{ rainbow_home }}/go"
+  when: go_current_version.stdout != 'go'+rainbow_go_version
 
 - name: download Go
   become: yes
   unarchive:
     remote_src: yes
-    src: https://dl.google.com/go/go{{go_version}}.linux-{{go_arch}}.tar.gz
-    dest: /usr/local
-    creates: /usr/local/go
+    src: https://dl.google.com/go/go{{rainbow_go_version}}.linux-{{rainbow_go_arch}}.tar.gz
+    dest: "{{ rainbow_home }}"
+    creates: "{{ rainbow_home }}/go"
 
+- name: copy rainbow environment
+  become: yes
+  template:
+    src: "rainbow.env"
+    dest: "{{ rainbow_home }}/rainbow.env"
+    owner: rainbow
+    group: rainbow
+    mode: 0600
+  tags:
+    - config
+  notify:
+    - "restart rainbow"
 
-- name: Checkout rainbow
+- name: save seed
+  become: yes
+  no_log: yes
+  template:
+    src: "seed"
+    dest: "{{ rainbow_home }}/seed"
+    owner: rainbow
+    group: rainbow
+    mode: 0600
+  tags:
+    - config
+  notify:
+    - "restart rainbow"
+    
+- name: checkout rainbow
   git:
     repo: "https://github.com/ipfs/rainbow"
     dest: "{{ rainbow_home }}/git"
@@ -54,13 +96,14 @@
   register: git
   diff: false
 
-- name: Compile rainbow
-  when: git.changed
+- name: compile rainbow
   command:
-    cmd: "CGO_ENABLED=0 go build -o /usr/local/bin/rainbow"
+    cmd: "go build -o /usr/local/bin/rainbow-{{ git.after }}"
     chdir: "{{ rainbow_home }}/git"
+    creates: "/usr/local/bin/rainbow-{{ git.after }}"
   environment:
-    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ rainbow_home }}/go/bin:{{ ansible_env.PATH }}"
+    CGO_ENABLED: 0
 
 - name: copy rainbow systemd service
   template:
@@ -68,5 +111,5 @@
     dest: "/etc/systemd/system/rainbow.service"
     force: yes
   notify:
-    - "Reload systemd"
-    - "Restart rainbow"
+    - "reload systemd"
+    - "restart rainbow"

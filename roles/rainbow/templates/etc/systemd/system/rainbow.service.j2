@@ -6,8 +6,9 @@ After=network.target
 Type=notify
 User=rainbow
 Group=rainbow
-EnvironmentFile="{{ rainbow_home }}/rainbow.env"
-ExecStart=/usr/local/bin/rainbow
+LoadCredentials=seed:{{ rainbow_home }}/seed
+EnvironmentFile={{ rainbow_home }}/rainbow.env
+ExecStart=/usr/local/bin/rainbow-{{ git.after }}
 Restart=always
 RestartSec=10
 LimitNOFILE=infinity
@@ -16,7 +17,7 @@ StandardError=syslog
 SyslogIdentifier=rainbow
 MemoryAccounting=true
 MemoryHigh=85%
-MemoryMax="95%"
+MemoryMax=95%
 OOMScoreAdjust=1000
 
 [Install]

@@ -1,14 +1,27 @@
 ---
-go_arch: amd64
-go_version: "1.21.2"
+rainbow_go_arch: amd64
+rainbow_go_version: "1.21.2"
 rainbow_home: "/home/rainbow"
 rainbow_version: "main"
 rainbow_gateway_port: 8090
 rainbow_ctl_port: 8091
 rainbow_connmgr_low: 100
 rainbow_connmgr_high: 3000
-rainbow_connmgr_grace: "1m"
+rainbow_connmgr_grace_period: "1m"
 rainbow_inmem_block_cache: 1073741824
 rainbow_max_memory: 0
 rainbow_max_fd: 0
 rainbow_denylists: ""
+
+
+rainbow_sysctl_config:
+  fs.inotify.max_user_instances: 1024
+  net.core.wmem_default: 65536
+  net.core.wmem_max: 16777216
+  net.ipv4.tcp_wmem: 4096 65536 16777216
+  # Increase UDP receive buffer size leads to a significant speedup
+  net.core.rmem_default: 21299200
+  net.core.rmem_max: 21299200
+  net.ipv4.tcp_rmem: 4096 87380 16777216
+  # Softnet: stops squeezed (dropped) packets under heavy load
+  net.core.netdev_budget_usecs: 6000
