@@ -1,0 +1,72 @@
+---
+
+- name: add rainbow user
+  user:
+    name: rainbow
+    shell: /bin/bash
+    create_home: yes
+    system: yes
+    home: "{{ rainbow_home }}"
+
+- name: make sure user home belongs to ipfs
+  file:
+    path: "{{ rainbow_home }}"
+    owner: rainbow
+    group: rainbow
+
+- name: Install deps for git
+  package:
+    name:
+      - git-core
+      - build-essential
+      - pkg-config
+      - libssl-dev
+
+- name: Check current go version
+  command: cat /usr/local/go/VERSION
+  check_mode: no
+  changed_when: no
+  failed_when: no
+  register: go_current_version
+      
+- name: uninstall go for upgrade
+  become: yes
+  file:
+    state: absent
+    dest: /usr/local/go
+  when: go_current_version != 'go'+go_version
+
+- name: download Go
+  become: yes
+  unarchive:
+    remote_src: yes
+    src: https://dl.google.com/go/go{{go_version}}.linux-{{go_arch}}.tar.gz
+    dest: /usr/local
+    creates: /usr/local/go
+
+
+- name: Checkout rainbow
+  git:
+    repo: "https://github.com/ipfs/rainbow"
+    dest: "{{ rainbow_home }}/git"
+    force: true
+    version: "{{ rainbow_version }}"
+  register: git
+  diff: false
+
+- name: Compile rainbow
+  when: git.changed
+  command:
+    cmd: "CGO_ENABLED=0 go build -o /usr/local/bin/rainbow"
+    chdir: "{{ rainbow_home }}/git"
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.PATH }}"
+
+- name: copy rainbow systemd service
+  template:
+    src: "etc/systemd/system/rainbow.service.j2"
+    dest: "/etc/systemd/system/rainbow.service"
+    force: yes
+  notify:
+    - "Reload systemd"
+    - "Restart rainbow"

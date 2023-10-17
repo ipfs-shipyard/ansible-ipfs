@@ -1,0 +1,9 @@
+---
+- name: Restart rainbow
+  ansible.builtin.systemd:
+    state: restarted
+    name: rainbow
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true

@@ -1,0 +1,23 @@
+[Unit]
+Description=Rainbow IPFS HTTP Gateway
+After=network.target
+
+[Service]
+Type=notify
+User=rainbow
+Group=rainbow
+EnvironmentFile="{{ rainbow_home }}/rainbow.env"
+ExecStart=/usr/local/bin/rainbow
+Restart=always
+RestartSec=10
+LimitNOFILE=infinity
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=rainbow
+MemoryAccounting=true
+MemoryHigh=85%
+MemoryMax="95%"
+OOMScoreAdjust=1000
+
+[Install]
+WantedBy=multi-user.target
