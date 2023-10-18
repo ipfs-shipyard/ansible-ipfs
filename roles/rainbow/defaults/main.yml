@@ -13,7 +13,7 @@ rainbow_inmem_block_cache: 1073741824
 rainbow_max_memory: 0
 rainbow_max_fd: 0
 rainbow_denylists: ""
-
+rainbow_golog_log_level: "nopfs=info,nopfs-blocks=warn"
 
 rainbow_sysctl_config:
   fs.inotify.max_user_instances: 1024
