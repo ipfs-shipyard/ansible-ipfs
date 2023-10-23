@@ -86,6 +86,7 @@
     - config
   notify:
     - "restart rainbow"
+  when: rainbow_seed is defined
     
 - name: checkout rainbow
   git:

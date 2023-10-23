@@ -3,7 +3,8 @@ rainbow_go_arch: amd64
 rainbow_go_version: "1.21.2"
 rainbow_home: "/home/rainbow"
 rainbow_version: "main"
-rainbow_gateway_domain: ""
+rainbow_gateway_domains: ""
+rainbow_subdomain_gateway_domains: ""
 rainbow_gateway_port: 8090
 rainbow_ctl_port: 8091
 rainbow_connmgr_low: 100
