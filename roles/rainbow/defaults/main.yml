@@ -10,6 +10,7 @@ rainbow_ctl_listen_address: "127.0.0.1:8091"
 rainbow_connmgr_low: 100
 rainbow_connmgr_high: 3000
 rainbow_connmgr_grace_period: "1m"
+rainbow_peering: ""
 rainbow_inmem_block_cache: 1073741824
 rainbow_max_memory: 0
 rainbow_max_fd: 0
